@@ -219,6 +219,14 @@ its number that failed before the fix and passes after it. Some were proved
 against the original code: #1 returned `500`, #2 a body of `200`, #8 `200` for
 `999` and `abc`, and #9 failed with `near "s": syntax error` on `Men's`.
 
+**Browser end-to-end check.** Run in a real browser from a fresh database:
+the empty state shows; a whitespace-only insight can't be submitted; a
+1,027-character insight is rejected with the server's message and nothing is
+stored; text with apostrophes, quotes and `<b>` is stored and shown verbatim,
+not as HTML; the list refreshes without a reload (#15); dates show in local
+time (#5); the list loads and renders (#3); delete removes the right row and
+survives a reload. A recording of the run is kept outside the repo.
+
 **Deviations from the plan, and why:**
 
 - The `lib/` schema tests live in `server/lib.test.ts`. Neither test task runs
@@ -228,7 +236,7 @@ against the original code: #1 returned `500`, #2 a body of `200`, #8 `200` for
 - `Insight.brand` is any integer. Unknown brands are rejected when an insight is
   created, so one bad old row can't stop the client parsing the whole list.
 - There's no `App`-level test for #3 (await and parse the list); it's covered by
-  the manual run-through. Worth adding next.
+  the browser end-to-end check below. Worth adding next.
 
 ## 10. Recommendations
 
@@ -262,6 +270,7 @@ I used Claude Code as a pair, with me making the decisions:
 - **Building:** one step at a time, test first. For each defect it watched the
   test fail for the right reason before fixing it. One commit per step, with
   `deno check`, `deno lint` and both suites run before each commit.
-- **Checking:** a manual run-through in the browser, then a review of the whole
-  diff (§9).
+- **Checking:** a review of the whole diff, then an agent drove a real browser
+  (Claude in Chrome) through the end-to-end scenarios from a fresh database,
+  then my own manual check (§9).
 
