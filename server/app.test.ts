@@ -153,4 +153,38 @@ describe("insights API", () => {
       }
     });
   });
+
+  describe("#12 DELETE /insights/:id", () => {
+    withDB((fixture) => {
+      const app = createApp(fixture.db);
+
+      beforeAll(() => {
+        const createdAt = new Date().toISOString();
+        fixture.insights.insert([
+          { brand: 1, createdAt, text: "keep" },
+          { brand: 2, createdAt, text: "remove" },
+        ]);
+      });
+
+      it("returns 204 and deletes the insight", async () => {
+        const res = await request(app, "DELETE", "/insights/2");
+        expect(res.status).toBe(204);
+        expect(fixture.insights.selectAll().map((row) => row.id)).toEqual([1]);
+      });
+
+      it("returns 404 for an unknown id", async () => {
+        const res = await request(app, "DELETE", "/insights/2");
+        expect(res.status).toBe(404);
+        expect(await res.json()).toEqual({ error: "Insight not found" });
+      });
+
+      for (const id of ["abc", "0", "-1", "1.5"]) {
+        it(`returns 400 for invalid id "${id}"`, async () => {
+          const res = await request(app, "DELETE", `/insights/${id}`);
+          expect(res.status).toBe(400);
+          expect(fixture.insights.selectAll()).toHaveLength(1);
+        });
+      }
+    });
+  });
 });
