@@ -4,11 +4,11 @@ import { Insights } from "./insights.tsx";
 
 const TEST_INSIGHTS = [
   {
-    brandId: 1,
-    date: new Date(),
+    brand: 1,
+    createdAt: new Date(),
     text: "Test insight",
   },
-  { brandId: 2, date: new Date(), text: "Another test insight" },
+  { brand: 2, createdAt: new Date(), text: "Another test insight" },
 ];
 
 describe("insights", () => {

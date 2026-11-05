@@ -1,6 +1,6 @@
-import { expect } from "jsr:@std/expect";
-import { beforeAll, describe, it } from "jsr:@std/testing/bdd";
-import type { Insight } from "$models/insight.ts";
+import { expect } from "@std/expect";
+import { beforeAll, describe, it } from "@std/testing/bdd";
+import type { Insight } from "../../lib/insight.ts";
 import { withDB } from "../testing.ts";
 import listInsights from "./list-insights.ts";
 
@@ -22,9 +22,9 @@ describe("listing insights in the database", () => {
   describe("populated DB", () => {
     withDB((fixture) => {
       const insights: Insight[] = [
-        { id: 1, brand: 0, createdAt: new Date(), text: "1" },
-        { id: 2, brand: 0, createdAt: new Date(), text: "2" },
-        { id: 3, brand: 1, createdAt: new Date(), text: "3" },
+        { id: 1, brand: 1, createdAt: new Date(), text: "1" },
+        { id: 2, brand: 1, createdAt: new Date(), text: "2" },
+        { id: 3, brand: 2, createdAt: new Date(), text: "3" },
         { id: 4, brand: 4, createdAt: new Date(), text: "4" },
       ];
 

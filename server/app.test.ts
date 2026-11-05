@@ -36,8 +36,8 @@ describe("insights API", () => {
 
       beforeAll(() => {
         fixture.insights.insert([
-          { brand: 0, createdAt, text: "first" },
-          { brand: 1, createdAt, text: "second" },
+          { brand: 1, createdAt, text: "first" },
+          { brand: 2, createdAt, text: "second" },
         ]);
       });
 
@@ -45,8 +45,8 @@ describe("insights API", () => {
         const res = await request(app, "GET", "/insights");
         expect(res.status).toBe(200);
         expect(await res.json()).toEqual([
-          { id: 1, brand: 0, createdAt, text: "first" },
-          { id: 2, brand: 1, createdAt, text: "second" },
+          { id: 1, brand: 1, createdAt, text: "first" },
+          { id: 2, brand: 2, createdAt, text: "second" },
         ]);
       });
 
@@ -55,7 +55,7 @@ describe("insights API", () => {
         expect(res.status).toBe(200);
         expect(await res.json()).toEqual({
           id: 2,
-          brand: 1,
+          brand: 2,
           createdAt,
           text: "second",
         });
