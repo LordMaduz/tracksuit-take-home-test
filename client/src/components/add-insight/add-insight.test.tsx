@@ -92,4 +92,30 @@ describe("add insight", () => {
     await vi.waitFor(() => expect(onAdded).toHaveBeenCalled());
     expect(fetch).toHaveBeenCalledTimes(1);
   });
+
+  it("clears the error when the dialog is closed and reopened", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(() =>
+        Promise.resolve(
+          new Response(JSON.stringify({ error: "text: Too long" }), {
+            status: 400,
+          }),
+        )
+      ),
+    );
+    const props = { onClose: vi.fn(), onAdded: vi.fn() };
+    const { rerender } = render(<AddInsight open {...props} />);
+
+    fireEvent.change(screen.getByLabelText("Insight"), {
+      target: { value: "hi" },
+    });
+    fireEvent.click(submit());
+    await screen.findByRole("alert");
+
+    rerender(<AddInsight open={false} {...props} />);
+    rerender(<AddInsight open {...props} />);
+
+    expect(screen.queryByRole("alert")).toBeNull();
+  });
 });

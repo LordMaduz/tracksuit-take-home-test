@@ -1,4 +1,4 @@
-import { type FormEvent, useState } from "react";
+import { type FormEvent, useEffect, useState } from "react";
 import { BRANDS } from "../../../../lib/brands.ts";
 import { Button } from "../button/button.tsx";
 import { Modal, type ModalProps } from "../modal/modal.tsx";
@@ -14,6 +14,11 @@ export const AddInsight = ({ onAdded, ...props }: AddInsightProps) => {
   const [text, setText] = useState("");
   const [error, setError] = useState<string>();
   const [submitting, setSubmitting] = useState(false);
+
+  // The form stays mounted while the dialog is closed, so drop any old error.
+  useEffect(() => {
+    if (!props.open) setError(undefined);
+  }, [props.open]);
 
   const addInsight = async (event: FormEvent) => {
     event.preventDefault();
