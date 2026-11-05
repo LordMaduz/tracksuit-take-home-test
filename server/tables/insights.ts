@@ -20,5 +20,6 @@ export type Insert = {
   text: string;
 };
 
-export const insertStatement = (item: Insert) =>
-  `INSERT INTO insights (brand, createdAt, text) VALUES (${item.brand}, '${item.createdAt}', '${item.text}')`;
+// Named parameters, bound by SQLite: never build SQL from values (#9).
+export const insertStatement =
+  "INSERT INTO insights (brand, createdAt, text) VALUES (:brand, :createdAt, :text)";

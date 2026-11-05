@@ -8,9 +8,18 @@ const request = async (
   app: ReturnType<typeof createApp>,
   method: string,
   path: string,
+  body?: unknown,
 ) => {
   const res = await app.handle(
-    new Request(`http://localhost${path}`, { method }),
+    new Request(`http://localhost${path}`, {
+      method,
+      headers: body === undefined ? {} : { "content-type": "application/json" },
+      body: body === undefined
+        ? undefined
+        : typeof body === "string"
+        ? body
+        : JSON.stringify(body),
+    }),
   );
   if (!res) throw new Error(`no response for ${method} ${path}`);
   return res;
@@ -80,6 +89,68 @@ describe("insights API", () => {
         expect(res.status).toBe(400);
         expect(fixture.insights.selectAll()).toHaveLength(2);
       });
+    });
+  });
+
+  describe("#12 POST /insights", () => {
+    withDB((fixture) => {
+      const app = createApp(fixture.db);
+
+      it("returns 201 and the created insight", async () => {
+        const res = await request(app, "POST", "/insights", {
+          brand: 2,
+          text: "  Suits are back  ",
+        });
+        expect(res.status).toBe(201);
+        const body = await res.json();
+        expect(body).toEqual({
+          id: 1,
+          brand: 2,
+          createdAt: expect.any(String),
+          text: "Suits are back",
+        });
+        expect(fixture.insights.selectAll()).toHaveLength(1);
+      });
+
+      it("ignores a client-sent id and createdAt", async () => {
+        const res = await request(app, "POST", "/insights", {
+          id: 99,
+          brand: 1,
+          text: "mine",
+          createdAt: "2000-01-01T00:00:00.000Z",
+        });
+        expect(res.status).toBe(201);
+        const body = await res.json();
+        expect(body.id).not.toBe(99);
+        expect(Date.now() - Date.parse(body.createdAt)).toBeLessThan(60_000);
+      });
+
+      it("accepts text of exactly 1,000 characters", async () => {
+        const res = await request(app, "POST", "/insights", {
+          brand: 1,
+          text: "a".repeat(1000),
+        });
+        expect(res.status).toBe(201);
+      });
+
+      const invalid: [string, unknown][] = [
+        ["an unknown brand", { brand: 99, text: "hi" }],
+        ["a missing brand", { text: "hi" }],
+        ["empty text", { brand: 1, text: "" }],
+        ["whitespace-only text", { brand: 1, text: "   " }],
+        ["text over 1,000 characters", { brand: 1, text: "a".repeat(1001) }],
+        ["malformed JSON", "{not json"],
+        ["a non-object body", "[]"],
+      ];
+      for (const [name, body] of invalid) {
+        it(`returns 400 for ${name}`, async () => {
+          const before = fixture.insights.selectAll().length;
+          const res = await request(app, "POST", "/insights", body);
+          expect(res.status).toBe(400);
+          expect(await res.json()).toEqual({ error: expect.any(String) });
+          expect(fixture.insights.selectAll()).toHaveLength(before);
+        });
+      }
     });
   });
 });
