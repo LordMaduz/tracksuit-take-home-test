@@ -238,8 +238,8 @@ survives a reload. A recording of the run is kept outside the repo.
 
 **Found in the final review and fixed:**
 
-- Submitting twice quickly created two insights. The form now ignores submits
-  while one is in flight and disables the button.
+- Submitting twice quickly created two insights. The submit button is now
+  disabled while a request is in flight, so a double-click sends one request.
 - An old error showed again when the form was reopened. It's now cleared when
   the dialog closes.
 - `App` had no test for loading the list (#3) or refreshing after a delete
@@ -257,6 +257,7 @@ survives a reload. A recording of the run is kept outside the repo.
 | The list query has no `ORDER BY` | SQLite returns id order in practice; choosing a sort order is a product decision |
 | A `null` request body gets a generic message | Only reachable by calling the API directly; the form can't send it |
 | An error stays visible while the text is edited | It clears on the next submit or when the dialog closes |
+| Two programmatic submits in the same tick both send | Only reachable from script; real clicks are separated by a re-render, which disables the button |
 
 ## 10. Recommendations
 
