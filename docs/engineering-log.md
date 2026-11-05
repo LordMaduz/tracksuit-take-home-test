@@ -210,7 +210,7 @@ each step:
 | Check | Before | After |
 |-------|--------|-------|
 | Server tests | 2 files | 7 files, 48 steps, all pass |
-| Client tests | 6 | 11, all pass |
+| Client tests | 6 | 15, all pass |
 | `deno check` | 4 errors | clean |
 | `deno lint` | 15 problems | clean |
 
@@ -235,8 +235,28 @@ survives a reload. A recording of the run is kept outside the repo.
   `z.coerce.number()`, which would accept `1e2`, ` 1` and `0x1`.
 - `Insight.brand` is any integer. Unknown brands are rejected when an insight is
   created, so one bad old row can't stop the client parsing the whole list.
-- There's no `App`-level test for #3 (await and parse the list); it's covered by
-  the browser end-to-end check below. Worth adding next.
+
+**Found in the final review and fixed:**
+
+- Submitting twice quickly created two insights. The form now ignores submits
+  while one is in flight and disables the button.
+- An old error showed again when the form was reopened. It's now cleared when
+  the dialog closes.
+- `App` had no test for loading the list (#3) or refreshing after a delete
+  (#15). Both are now tested, and each test fails if its fix is removed.
+
+**Accepted limitations (not fixed, and why):**
+
+| Limitation | Why it's accepted |
+|------------|-------------------|
+| Two overlapping list refreshes could finish out of order | Needs out-of-order responses from a local API for one user; a fix needs request cancellation |
+| The text box has no `maxLength` | The server enforces 1,000 and the form shows its message; a client copy of the limit could drift |
+| Zero-width characters count as text | Only possible on purpose; blocking it needs Unicode-aware checks |
+| The client's date parsing is lenient | The server is the only source of dates and always sends ISO strings |
+| Delete doesn't check the response status | The list refreshes either way, so it shows the true state; error display is in §10 |
+| The list query has no `ORDER BY` | SQLite returns id order in practice; choosing a sort order is a product decision |
+| A `null` request body gets a generic message | Only reachable by calling the API directly; the form can't send it |
+| An error stays visible while the text is edited | It clears on the next submit or when the dialog closes |
 
 ## 10. Recommendations
 
@@ -252,7 +272,7 @@ v5, which would bury a two-package change in a full-file diff. Exposure is low
 deno install && deno task test:client   # then commit deno.lock
 ```
 
-**Next:** an `App` test that mocks `fetch` (#3); showing list and delete errors
+**Next:** showing list and delete errors
 in the UI (today they're logged to the console); moving the toolchain to a
 current Deno, with the lockfile rewrite as its own commit.
 
