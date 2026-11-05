@@ -4,7 +4,7 @@ import { withDB } from "../testing.ts";
 import type { Insight } from "../../lib/insight.ts";
 import lookupInsight from "./lookup-insight.ts";
 
-describe("listing insights in the database", () => {
+describe("looking up an insight in the database", () => {
   describe("specified insight not in the DB", () => {
     withDB((fixture) => {
       let result: Insight | undefined;
