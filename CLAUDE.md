@@ -38,3 +38,5 @@ string-built SQL.
   committing.
 - Vite listens on 127.0.0.1 only; `localhost` may fail.
 - `@deno/vite-plugin` prints a harmless "Pre-transform error" in client tests.
+- `deno task test:client` on Deno 2.9.8 can exit 1 with `Uncaught BrokenPipe`
+  after all tests pass. Check the `Tests … passed` line, not the exit code.

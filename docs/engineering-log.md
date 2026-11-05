@@ -5,7 +5,8 @@ records the reasoning, the evidence and the trade-offs.
 
 **Contents:** 1. Context · 2. System overview · 3. Approach ·
 4. Pre-flight security review · 5. Current state, checked by running it ·
-6. Design decisions · 7. Plan · 8. Environment notes
+6. Design decisions · 7. Plan · 8. Environment notes · 9. Results ·
+10. Recommendations · 11. How I used AI
 
 ---
 
@@ -64,8 +65,8 @@ install scripts (0 of 209 npm packages), no remote imports, no hidden content.
 
 | Finding | Exposure here | Action |
 |---------|---------------|--------|
-| Vitest 3.0.2: [CVE-2025-24964](https://osv.dev/vulnerability/CVE-2025-24964). Any website can run code through Vitest's API server | Low. `vitest run` doesn't start that server | Patch upgrade to ≥ 3.0.5 |
-| Vite 6.0.3: [CVE-2025-30208](https://advisories.gitlab.com/pkg/npm/vite/CVE-2025-30208/). Bypass of `server.fs.deny` lets anyone who can reach the dev server read files | Only if the dev server is exposed with `--host` | Patch upgrade to ≥ 6.0.12 |
+| Vitest 3.0.2: [CVE-2025-24964](https://osv.dev/vulnerability/CVE-2025-24964). Any website can run code through Vitest's API server | Low. `vitest run` doesn't start that server | Recommended, not applied (§10) |
+| Vite 6.0.3: [CVE-2025-30208](https://advisories.gitlab.com/pkg/npm/vite/CVE-2025-30208/). Bypass of `server.fs.deny` lets anyone who can reach the dev server read files | Only if the dev server is exposed with `--host` | Recommended, not applied (§10) |
 | Client tasks run with `-A` | Any compromised dependency gets full access | Accepted (normal for Vite on Deno); the lockfile hashes limit the risk |
 
 **Limits:** dependencies were checked by name, version and lockfile hash, not by
@@ -199,3 +200,68 @@ each step:
 - **Harmless warning:** `@deno/vite-plugin` prints a "Pre-transform error" for
   Vitest's own files during client tests. It isn't from the app's code and
   doesn't fail any tests.
+- **Flaky exit code:** on Deno 2.9.8, `deno task test:client` sometimes exits 1
+  with `Uncaught BrokenPipe` *after* Vitest reports every test passed. It also
+  happens on the untouched baseline and with `vitest run` called directly, so
+  it comes from the toolchain, not the tests. Read the `Tests … passed` line.
+
+## 9. Results
+
+| Check | Before | After |
+|-------|--------|-------|
+| Server tests | 2 files | 7 files, 48 steps, all pass |
+| Client tests | 6 | 11, all pass |
+| `deno check` | 4 errors | clean |
+| `deno lint` | 15 problems | clean |
+
+Every defect and gap in §5 (#1–#16) is covered. Each fix has a test named after
+its number that failed before the fix and passes after it. Some were proved
+against the original code: #1 returned `500`, #2 a body of `200`, #8 `200` for
+`999` and `abc`, and #9 failed with `near "s": syntax error` on `Men's`.
+
+**Deviations from the plan, and why:**
+
+- The `lib/` schema tests live in `server/lib.test.ts`. Neither test task runs
+  `lib/`, and giving `lib/` its own `@std` imports would change `deno.lock`.
+- The route-level `:id` check is digits only (`/^[1-9]\d*$/`), stricter than
+  `z.coerce.number()`, which would accept `1e2`, ` 1` and `0x1`.
+- `Insight.brand` is any integer. Unknown brands are rejected when an insight is
+  created, so one bad old row can't stop the client parsing the whole list.
+- There's no `App`-level test for #3 (await and parse the list); it's covered by
+  the manual run-through. Worth adding next.
+
+## 10. Recommendations
+
+**Patch upgrades (not applied).** The upgrade belongs on the repo's Deno 2.1.2:
+on 2.9.8 the same change also rewrites the whole `deno.lock` from format v4 to
+v5, which would bury a two-package change in a full-file diff. Exposure is low
+(see §4), so it's recorded rather than forced:
+
+```sh
+# on Deno 2.1.2, in client/deno.json
+"vite": "npm:vite@^6.0.12",      # CVE-2025-30208
+"vitest": "npm:vitest@^3.0.5",   # CVE-2025-24964
+deno install && deno task test:client   # then commit deno.lock
+```
+
+**Next:** an `App` test that mocks `fetch` (#3); showing list and delete errors
+in the UI (today they're logged to the console); moving the toolchain to a
+current Deno, with the lockfile rewrite as its own commit.
+
+## 11. How I used AI
+
+I used Claude Code as a pair, with me making the decisions:
+
+- **Before any code:** it helped with the security pre-flight and with reading
+  and running the repo. I checked the findings (§4, §5) myself and agreed the
+  design (§6) before any plan was written.
+- **Guardrails:** `CLAUDE.md` sets the working agreement: follow the approved
+  plan, test first, use bound SQL, ask before touching dependencies or the
+  lockfile. It stopped twice for decisions outside the plan (where the `lib/`
+  tests go, and the lockfile), and I made both calls.
+- **Building:** one step at a time, test first. For each defect it watched the
+  test fail for the right reason before fixing it. One commit per step, with
+  `deno check`, `deno lint` and both suites run before each commit.
+- **Checking:** a manual run-through in the browser, then a review of the whole
+  diff (§9).
+
