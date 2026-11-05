@@ -1,3 +1,5 @@
+import { z } from "zod";
+
 export const BRANDS = [
   { id: 1, name: "Brand 1" },
   { id: 2, name: "Brand 2" },
@@ -6,3 +8,8 @@ export const BRANDS = [
   { id: 5, name: "Brand 5" },
   { id: 6, name: "Brand 6" },
 ];
+
+export const BrandId = z.number().int().refine(
+  (id) => BRANDS.some((brand) => brand.id === id),
+  "Unknown brand",
+);
