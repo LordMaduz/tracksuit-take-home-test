@@ -9,17 +9,18 @@ and the agreed design is in [§6](../../engineering-log.md#6-design-decisions).
 This plan doesn't repeat them.
 
 **Workflow:** brainstorm, agree the design (§6), plan (this doc), then build
-test-first, review and verify. The design was a bounded change to existing
-code, so the decisions live in the log rather than a separate spec.
+test-first, review and verify. The design was a bounded change to existing code,
+so the decisions live in the log rather than a separate spec.
 
 **Rules for every step:**
+
 - **Test first.** Write a failing regression test that names its defect number,
   then make it pass.
 - **Keep `deno.lock` unchanged.** Local Deno (2.9.8) rewrites it into a newer
   format than the repo's 2.1.2, so run commands normally, then
   `git checkout -- deno.lock`. (`--frozen` refuses to run at all on 2.9.8.)
-- **Work on a feature branch from `main`,** with one Conventional Commit per step
-  (more if needed) and no AI attribution trailer. Open the PR into `main`.
+- **Work on a feature branch from `main`,** with one Conventional Commit per
+  step (more if needed) and no AI attribution trailer. Open the PR into `main`.
 - **Done** means the step's tests pass and `deno check` is clean for the files
   touched.
 
@@ -125,9 +126,9 @@ Implementation starts in a **new session**, because Claude Code only loads
 
 - `deno check`, `deno lint`, `deno task test:server`, `deno task test:client`,
   all clean.
-- A manual run-through at `http://127.0.0.1:3000` from a fresh database:
-  list, add (including an apostrophe), delete, and invalid input. First delete
-  the git-ignored `server/tmp/db.sqlite3`. It was created by hand during
+- A manual run-through at `http://127.0.0.1:3000` from a fresh database: list,
+  add (including an apostrophe), delete, and invalid input. First delete the
+  git-ignored `server/tmp/db.sqlite3`. It was created by hand during
   verification and already has the table, which would hide #1.
 - One review pass over the whole diff. Fix the serious findings and log the
   minor ones.
