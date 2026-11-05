@@ -13,9 +13,12 @@ export const AddInsight = ({ onAdded, ...props }: AddInsightProps) => {
   const [brand, setBrand] = useState(BRANDS[0].id);
   const [text, setText] = useState("");
   const [error, setError] = useState<string>();
+  const [submitting, setSubmitting] = useState(false);
 
   const addInsight = async (event: FormEvent) => {
     event.preventDefault();
+    if (submitting) return;
+    setSubmitting(true);
     setError(undefined);
 
     try {
@@ -32,6 +35,8 @@ export const AddInsight = ({ onAdded, ...props }: AddInsightProps) => {
     } catch {
       setError("Could not reach the server");
       return;
+    } finally {
+      setSubmitting(false);
     }
 
     setText("");
@@ -71,7 +76,7 @@ export const AddInsight = ({ onAdded, ...props }: AddInsightProps) => {
           className={styles.submit}
           type="submit"
           label="Add insight"
-          disabled={!text.trim()}
+          disabled={submitting || !text.trim()}
         />
       </form>
     </Modal>

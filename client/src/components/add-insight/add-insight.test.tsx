@@ -75,4 +75,21 @@ describe("add insight", () => {
     expect(onClose).not.toHaveBeenCalled();
     expect(onAdded).not.toHaveBeenCalled();
   });
+
+  it("#13 sends one request when submitted twice quickly", async () => {
+    const fetch = vi.fn(() =>
+      Promise.resolve(new Response("{}", { status: 201 }))
+    );
+    vi.stubGlobal("fetch", fetch);
+    const { onAdded } = renderForm();
+
+    fireEvent.change(screen.getByLabelText("Insight"), {
+      target: { value: "once" },
+    });
+    fireEvent.click(submit());
+    fireEvent.click(submit());
+
+    await vi.waitFor(() => expect(onAdded).toHaveBeenCalled());
+    expect(fetch).toHaveBeenCalledTimes(1);
+  });
 });
